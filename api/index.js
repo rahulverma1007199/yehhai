@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 app.use(express.static(path.join(__dirname,'public')))
-app.use('/static',express.static('public'))
+app.use('/api',express.static('public'))
 
 const storage  = multer.diskStorage({
     destination: function(req,file,cb){
