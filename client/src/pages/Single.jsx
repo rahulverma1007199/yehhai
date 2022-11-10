@@ -1,34 +1,78 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import axios from 'axios';
+import React, { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Menu from '../components/Menu'
-
+import moment from 'moment';
+import { useContext } from 'react';
+import { AuthContext } from '../context/authContext';
+import DOMPurify from "dompurify";
+import Delete from "../images/delete.png";
+import Edit from "../images/edit.png";
 const Single = () => {
+
+  const [post,setPost] = useState([]);
+
+  const location = useLocation();
+  const navigate = useNavigate ();
+
+  const postID = location.pathname.split("/")[2];
+
+  const {currentUser} = useContext(AuthContext);
+
+  const handleDelete = async () => {
+    try {
+      await axios.post(`http://localhost:8800/api/posts/delete/${postID}`,{token:currentUser.access_token, post : "delete"
+      });
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(()=>{
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8800/api/posts/${postID}`);
+        setPost(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    fetchData();
+  },[postID]);
+  // const getText = (html) => {
+  //   const doc = new DOMParser().parseFromString(html, 'text/html');
+  //   return doc.body.textContent;
+  // }
+
   return (
     <div className='single'>
       <div className="content">
-        <img src="https://images.pexels.com/photos/7008010/pexels-photo-7008010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" />
+        <img src={`http://localhost:8800/static/images/${post?.img}`} alt="" />
 
         <div className="user">
-          <img src="https://images.pexels.com/photos/7008010/pexels-photo-7008010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" />
+          {post.userImg !==undefined && 
+          <img src={`http://localhost:8800/static/images/${post.userImg}`} alt="" />}
           <div className="info">
-            <span>John</span>
-            <p>posted 2 days ago</p>
+            <span>{post.username}</span>
+            <p>posted {moment(post.date).fromNow()}</p>
           </div>
-          <div className="edit">
-            <Link to={`/write?edit=2`}>
-                <img src="" alt="edit" />
+          {currentUser.username === post.username && <div className="edit">
+            <Link to={`/write?edit=2`} state={post}>
+                <img src={Edit} alt="edit" />
             </Link>
-            <img src="" alt="delete" />
-          </div>
+            <img onClick={handleDelete} src={Delete} alt="delete" />
+          </div>}
         </div>
-        <h1>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo, quod.</h1>
-        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Velit minima consequatur nesciunt aspernatur aut, earum, itaque dolorum voluptates placeat excepturi veniam error modi quibusdam voluptatibus culpa similique ut quis. Sapiente incidunt temporibus voluptate delectus eos repudiandae, tempore facilis voluptatibus, possimus velit quidem aspernatur nihil culpa neque hic. Neque rem ad saepe sint tempore inventore architecto dolore nobis suscipit soluta eos amet molestiae quae, cumque accusamus impedit similique ab corrupti corporis ex deserunt ipsum fuga. Reprehenderit totam quos fugiat optio a voluptatem excepturi, nam error doloribus, sit ut molestias! Quidem rerum quis, natus obcaecati ducimus nemo hic libero repudiandae commodi dolor.</p>
-        <br />
-        <br />
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Fuga magni quasi, ut necessitatibus numquam voluptatem, sapiente cum at qui ad est id fugiat in mollitia tempora temporibus culpa pariatur. Officia impedit, labore autem quaerat laborum, suscipit a distinctio eaque, adipisci accusantium iure molestiae nihil sed voluptates sequi dicta quasi odio dolor nulla quo fugit expedita reprehenderit vero. Odio quae ratione mollitia sapiente eum praesentium consectetur. Ab, dolor. Earum iste, quaerat reprehenderit corrupti ipsa sequi quibusdam fugiat distinctio corporis eum velit aperiam, laboriosam assumenda consectetur optio animi est. Est qui animi, alias aut fuga ullam recusandae labore debitis possimus quis assumenda.</p>
+        <h1>{post.title}</h1>
+        {/* {getText(post.desc)}
+         */}
+         <p  dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.desc),
+          }}></p>
       </div>
       <div className="menu">
-        <Menu />
+        <Menu cat={post.cat}/>
       </div>
     </div>
   )
