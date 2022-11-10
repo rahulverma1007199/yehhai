@@ -21,7 +21,7 @@ const Write = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post("http://localhost:8800/api/upload",formData);
+      const res = await axios.post("https://yeh-hai.com/api/upload",formData);
       return res.data;
     } catch (error) {
       console.log(error)
@@ -39,9 +39,9 @@ const Write = () => {
       imgUrl =await upload();
     }
     try {
-      state ? await axios.put(`http://localhost:8800/api/posts/${state.id}`,{
+      state ? await axios.put(`https://yeh-hai.com/api/posts/${state.id}`,{
         title,desc:value, cat, img:file ? imgUrl : "",token:currentUser.access_token
-      }) :  await axios.post(`http://localhost:8800/api/posts/`,{
+      }) :  await axios.post(`https://yeh-hai.com/api/posts/`,{
         title,desc:value, cat, img:file ? imgUrl : "", date : moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"), token:currentUser.access_token
       });
       navigate("/")

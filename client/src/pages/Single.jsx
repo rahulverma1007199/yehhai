@@ -21,7 +21,7 @@ const Single = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.post(`http://localhost:8800/api/posts/delete/${postID}`,{token:currentUser.access_token, post : "delete"
+      await axios.post(`https://yeh-hai.com/api/posts/delete/${postID}`,{token:currentUser.access_token, post : "delete"
       });
       navigate("/");
     } catch (error) {
@@ -32,7 +32,7 @@ const Single = () => {
   useEffect(()=>{
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:8800/api/posts/${postID}`);
+        const res = await axios.get(`https://yeh-hai.com/api/posts/${postID}`);
         setPost(res.data);
       } catch (error) {
         console.log(error);
@@ -48,11 +48,11 @@ const Single = () => {
   return (
     <div className='single'>
       <div className="content">
-        <img src={`http://localhost:8800/static/images/${post?.img}`} alt="" />
+        <img src={`https://yeh-hai.com/static/images/${post?.img}`} alt="" />
 
         <div className="user">
           {post.userImg !==undefined && 
-          <img src={`http://localhost:8800/static/images/${post.userImg}`} alt="" />}
+          <img src={`https://yeh-hai.com/static/images/${post.userImg}`} alt="" />}
           <div className="info">
             <span>{post.username}</span>
             <p>posted {moment(post.date).fromNow()}</p>

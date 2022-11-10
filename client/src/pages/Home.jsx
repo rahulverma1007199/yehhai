@@ -10,7 +10,7 @@ const Home = () => {
   useEffect(()=>{
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:8800/api/posts${cat}`);
+        const res = await axios.get(`https://yeh-hai.com/api/posts${cat}`);
         setPosts(res.data);
       } catch (error) {
         console.log(error);
@@ -60,7 +60,7 @@ const Home = () => {
         {posts.map(post=>(
           <div className="post" key={post.id}>
             <div className="img">
-              <img src={`http://localhost:8800/static/images/${post.img}`} alt="" />
+              <img src={`https://yeh-hai.com/static/images/${post.img}`} alt="" />
               {consoler(post.img)}
             </div>
             <div className="content">
