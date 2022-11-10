@@ -6,7 +6,7 @@
 .pnp.js
 
 #image
-../api/public/images
+../api/public/images/
 # testing
 /coverage
 
