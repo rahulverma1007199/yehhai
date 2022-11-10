@@ -10,14 +10,14 @@ export const AuthContextProvider = ({ children }) => {
 
   const login = async (inputs) => {
     const res = await axios.post(
-      "http://localhost:8800/api/auth/login",
+      "https://yeh-hai.com/api/auth/login",
       inputs
     );
     setCurrentUser(res.data);
   };
 
   const logout = async (inputs) => {
-    await axios.post("http://localhost:8800/api/auth/logout");
+    await axios.post("https://yeh-hai.com/api/auth/logout");
     setCurrentUser(null);
   };
 
