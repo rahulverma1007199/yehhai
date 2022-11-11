@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom';
 
 
 const Menu = ({cat}) => {
@@ -10,7 +11,7 @@ const Menu = ({cat}) => {
   useEffect(()=>{
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:8800/api/posts/?cat=${cat}`);
+        const res = await axios.get(`https://yeh-hai.com/api/posts/?cat=${cat}`);
         setPosts(res.data);
       } catch (error) {
         console.log(error);
@@ -24,9 +25,12 @@ const Menu = ({cat}) => {
         <h1>Others posts you may like</h1>
         {posts.map(post=>(
             <div className="post" key={post.id}>
-                <img src={`http://localhost:8800/static/images/${post.img}`} alt="" />
+              <Link className="link" to={`/post/${post.id}`}>
+
+                <img src={`https://yeh-hai.com/api/images/${post.img}`} alt="" />
                 <h2>{post.title}</h2>
                 <button>Read More</button>
+              </Link>  
             </div>
         ))}
     </div>

@@ -18,6 +18,7 @@ const Single = () => {
   const postID = location.pathname.split("/")[2];
 
   const {currentUser} = useContext(AuthContext);
+  console.log(currentUser);
 
   const handleDelete = async () => {
     try {
@@ -48,16 +49,16 @@ const Single = () => {
   return (
     <div className='single'>
       <div className="content">
-        <img src={`https://yeh-hai.com/static/images/${post?.img}`} alt="" />
+        <img src={`https://yeh-hai.com/api/images/${post?.img}`} alt="" />
 
         <div className="user">
           {post.userImg !==undefined && 
-          <img src={`https://yeh-hai.com/static/images/${post.userImg}`} alt="" />}
+          <img src={`https://yeh-hai.com/api/images/${post.userImg}`} alt="" />}
           <div className="info">
             <span>{post.username}</span>
             <p>posted {moment(post.date).fromNow()}</p>
           </div>
-          {currentUser.username === post.username && <div className="edit">
+          {currentUser?.username === post.username && <div className="edit">
             <Link to={`/write?edit=2`} state={post}>
                 <img src={Edit} alt="edit" />
             </Link>
