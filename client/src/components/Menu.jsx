@@ -20,6 +20,7 @@ const Menu = ({cat}) => {
     fetchData();
   },[cat]);
 
+
   return (
     <div className='menu'>
         <h1>Others posts you may like</h1>

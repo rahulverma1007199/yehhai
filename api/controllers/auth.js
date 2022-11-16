@@ -28,7 +28,7 @@ export const register = (req,res)=> {
 
 export const login = (req,res)=> {
     // check user exits 
-    const q = "SELECT * FROM users WHERE username = ?"
+    const q = "SELECT * FROM users WHERE username = ? AND verified = 1"
     db.query(q,[req.body.username], (err, data)=> {
         if(err) return res.json(err);
         if(data.length === 0 ) return res.status(404).json("User not found");

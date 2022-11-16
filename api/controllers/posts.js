@@ -3,8 +3,8 @@ import jwt from "jsonwebtoken";
 import cookies from "cookie-parser";
 export const getPosts = (req, res) => {
   const q = req.query.cat
-    ? "SELECT * FROM posts WHERE cat = ? "
-    : "SELECT * FROM posts";
+    ? "SELECT * FROM posts WHERE cat = ? AND verified = 1"
+    : "SELECT * FROM posts where verified = 1";
   db.query(q, [req.query.cat], (err, data) => {
     if (err) return res.json(err);
     return res.status(200).json(data);
@@ -13,7 +13,7 @@ export const getPosts = (req, res) => {
 
 export const getPost = (req, res) => {
   const q =
-    "SELECT p.id ,`username`, `title`, `desc`, p.img, u.img AS userImg , `cat`, `date` FROM users u JOIN posts p ON u.id=p.uid WHERE p.id = ?";
+    "SELECT p.id ,`username`,`title`, `desc`, p.img, u.img AS userImg , `cat`, `date` FROM users u JOIN posts p ON u.id=p.uid WHERE p.id = ?";
   db.query(q, [req.params.id], (err, data) => {
     if (err) return res.json(err);
     return res.status(200).json(data[0]);

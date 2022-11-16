@@ -46,9 +46,7 @@ const Home = () => {
   //   },
   // ];
 
-  const consoler = (img) => {
-    console.log(img);
-  };
+
   const getText = (html) => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const newDesc = doc.body.textContent.slice(0, 300);
@@ -62,7 +60,6 @@ const Home = () => {
           <div className="post" key={post.id}>
             <div className="img">
               <img src={`https://yeh-hai.com/api/images/${post.img}`} alt="" />
-              {consoler(post.img)}
             </div>
             <div className="content">
               <Link className="link" to={`/post/${post.id}`}>

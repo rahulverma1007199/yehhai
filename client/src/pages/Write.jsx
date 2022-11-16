@@ -6,6 +6,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import {  useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
+import { useAlert } from "react-alert";
 const Write = () => {
 
   const state = useLocation().state;
@@ -28,7 +29,7 @@ const Write = () => {
     }
   }
 
-
+  const alert = useAlert(); 
     const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -44,6 +45,7 @@ const Write = () => {
       }) :  await axios.post(`https://yeh-hai.com/api/posts/`,{
         title,desc:value, cat, img:file ? imgUrl : "", date : moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"), token:currentUser.access_token
       });
+      alert.show("Post has been sent for verification")
       navigate("/")
     } catch (error) {
       console.log(error);

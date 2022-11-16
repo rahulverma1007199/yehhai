@@ -7,9 +7,11 @@ import Write from "./pages/Write";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import './style.scss'; 
+import Notice from "./components/Notice";
 const Layout = () => {
   return(
      <>
+     <Notice />
      <Navbar />
      <Outlet />
      <Footer />

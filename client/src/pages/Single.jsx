@@ -18,7 +18,6 @@ const Single = () => {
   const postID = location.pathname.split("/")[2];
 
   const {currentUser} = useContext(AuthContext);
-  console.log(currentUser);
 
   const handleDelete = async () => {
     try {
@@ -45,15 +44,20 @@ const Single = () => {
   //   const doc = new DOMParser().parseFromString(html, 'text/html');
   //   return doc.body.textContent;
   // }
-
+  const getImage = (img) => {
+    // const image = await axios.get(`https://yeh-hai.com/api/images/${img}`);
+    console.log(img, " check test");
+  };
   return (
     <div className='single'>
       <div className="content">
-        <img src={`https://yeh-hai.com/api/images/${post?.img}`} alt="" />
-
+        {
+          post.userImg !==undefined &&  
+        <img src={`https://yeh-hai.com/api/images/${post?.img}`} alt="" />      
+      }
         <div className="user">
           {post.userImg !==undefined && 
-          <img src={`https://yeh-hai.com/api/images/${post.userImg}`} alt="" />}
+          <img src={`https://yeh-hai.com/api/images/${post?.userImg}`} alt="" />}
           <div className="info">
             <span>{post.username}</span>
             <p>posted {moment(post.date).fromNow()}</p>

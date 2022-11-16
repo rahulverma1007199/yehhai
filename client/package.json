@@ -11,6 +11,8 @@
     "dotenv": "^16.0.3",
     "moment": "^2.29.4",
     "react": "^18.2.0",
+    "react-alert": "^7.0.3",
+    "react-alert-template-basic": "^1.0.2",
     "react-dom": "^18.2.0",
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.4.3",
@@ -42,5 +44,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8800/api/"
+  "proxy": "https://yeh-hai.com/api/"
 }

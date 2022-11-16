@@ -1,8 +1,12 @@
 import React from 'react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import {useAlert} from 'react-alert';
 import axios from 'axios';
 const Register = () => {
+
+  const alert = useAlert();
+ 
 
   const [inputs,setInputs] = useState({
     username:"",
@@ -22,6 +26,7 @@ const Register = () => {
     e.preventDefault();
     try {
       await axios.post("https://yeh-hai.com/api/auth/register",inputs); 
+      alert.show("Your profile has been sent for verification");
       navigate("/login");
     } catch (error) {
       setError(error.response.data);
