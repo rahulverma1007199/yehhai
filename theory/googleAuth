@@ -1,0 +1,11 @@
+go to Firebase 
+    Go to console
+    Add a project
+    Click Web Code
+    Paste at Firebase
+
+In Build Section
+    Authentication
+    set google
+
+for admin initialise = project overview setting - service accounts tab - generate new private key
