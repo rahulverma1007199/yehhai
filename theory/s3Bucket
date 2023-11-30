@@ -1,0 +1,36 @@
+search s3 
+    create bucket - uncheck block all public access 
+    in Permissions
+        edit bucket policy - click policy generator - 
+            policy s3 bucket
+            principle = *
+            action - getObject, putObject
+            arnnumber - arn from eidt bueck
+            generate code 
+        and paste in policy page but make sure to put /* in the resource key
+
+        for Cors
+        [
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "HEAD",
+            "GET"
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": []
+    }
+]
+
+
+see the code in server.js for setup
+for access code - search iam - policy - create policy - service = s3   
+    action - getObject putObject
+    resource - sepcific - add arns - paste bucket name and select any object name
+
+then users - create user - attach policy directly - create access key - other 

@@ -7,8 +7,10 @@ import jwt from "jsonwebtoken";
 import cors from 'cors';
 import admin from 'firebase-admin';
 import {getAuth} from 'firebase-admin/auth';
+import aws from "aws-sdk";
 
 import User from "./Schema/User.js";
+import Blog from "./Schema/Blog.js";
 import serviceAccountKey from './yeh-hai-14364-firebase-adminsdk-xeyjy-746e1f0b76.json' assert { type: "json" };;
 
 const server = express();
@@ -19,12 +21,31 @@ admin.initializeApp({credential:admin.credential.cert(serviceAccountKey)});
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
 
-server.use(cors({origin: ['http://localhost:5173'],credentials: true}));
+server.use(cors());
 server.use(express.json());
 
 mongoose.connect(process.env.DB_URL,{
     autoIndex:true
 });
+
+//seting up s3 bucket
+const s3 = new aws.S3({
+    region:'ap-south-1',
+    accessKeyId:process.env.AWS_SECRET_KEY,
+    secretAccessKey:process.env.AWS_ACCESS_KEY
+});
+
+const generateUploadURL =async () => {
+    const date = new Date();
+    const imageName = `${nanoid()}-${date.getTime()}.jpeg`;
+
+    return await s3.getSignedUrlPromise('putObject',{
+        Bucket:'bucketname',
+        Key:imageName,
+        Expires:1000,
+        ContentType : "image/jpeg"
+    })
+}
 
 const formatDataToSend = (user) => {
     const access_token = jwt.sign({id : user._id}, process.env.SECRET_ACCESS_KEY)
@@ -43,6 +64,31 @@ const generateUsername = async (email) => {
     isUserNameUnique ? username += nanoid().substring(0,5) : "";
     return username;
 }
+
+const verifyJWT = (req,res,next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if(token == null){
+        return res.status(401).json({"error":"No access token"});
+    }
+
+    jwt.verify(token, process.env.SECRET_ACCESS_KEY , (err,user)=>{
+        if(err){
+            return res.status(403).json({"error":"Invalid access token"});
+        }
+
+        req.user = user.id;
+        next();
+    });
+}
+
+//upload image url route
+server.get("/get-upload-url",(req,res) => {
+    generateUploadURL().then(url => res.status(200).json({"uploadURL":url})).catch(err => {
+        res.status(500).json({'error':err.message});
+    });
+});
 
 server.post("/signup",(req,res)=>{
     const {fullname, email, password} = req.body;
@@ -144,6 +190,60 @@ server.post("/google-auth",async (req,res)=>{
     }).catch(err => {
         return res.status(500).json({"error": "Failed to authenticate with google"});
     });
+});
+
+server.post("/create-blog",verifyJWT, (req,res)=>{
+    const autherID = req.user;
+    
+    let {title,des, banner, tags, content,draft = undefined} = req.body;
+
+    if(!draft){
+        if(!des.length || des.length > 200){
+            return res.status(403).json({"error":"You must provide desc under 200 words"});
+        }
+    
+        if(!banner.length){
+            return res.status(403).json({"error":"You must provide banner"});
+        }
+    
+        if(!content.blocks.length){
+            return res.status(403).json({"error":"You must provide some block content"});
+        }
+    
+        if(!tags.length || tags.length > 10 ){
+            return res.status(403).json({"error":"You must provide tags under 10 length"});
+        }
+    }
+
+    if(!title.length){
+        return res.status(403).json({"error":"Please provide title"});
+    }
+
+ 
+
+    tags = tags.map(tag => tag.toLowerCase());
+
+    const blog_id = title.replace(/[^a-zA-Z0-9]/g,'').replace(/\s+/g,"-").trim() + nanoid();
+
+    const blog = new Blog({
+        title,des,content,banner,tags,author:autherID,blog_id,draft:Boolean(draft)
+    });
+
+    blog.save().then(blog => {
+        const incrementalVal = draft ? 0 : 1;
+
+        User.findOneAndUpdate({_id : autherID} , {$inc : {"account_info.total_posts":incrementalVal}, $push :{"blogs":blog._id}}).then(user => {
+            return res.status(200).json({id : user._blog_id});
+        }).catch((err)=>{
+            return res.status(500).json({"error":"Failed to uplaod"});
+
+        });
+
+    }).catch(err => {
+        return res.status(500).json({"error":err.message});
+    })
+
+
 });
 
 server.listen(PORT,()=>{
