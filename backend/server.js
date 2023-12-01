@@ -11,6 +11,8 @@ import aws from "aws-sdk";
 
 import User from "./Schema/User.js";
 import Blog from "./Schema/Blog.js";
+import Notification from "./Schema/Notification.js";
+
 import serviceAccountKey from './yeh-hai-14364-firebase-adminsdk-xeyjy-746e1f0b76.json' assert { type: "json" };;
 
 const server = express();
@@ -193,19 +195,19 @@ server.post("/google-auth",async (req,res)=>{
 });
 
 server.post("/search-blogs",(req,res)=>{
-    const {tag,query,page,author} = req.body;
+    const {tag,query,page,author,limit,eliminate_blog} = req.body;
 
     let findQuery;
 
     if(tag){
-        findQuery = {tags :tag, draft:false};
+        findQuery = {tags :tag, draft:false,blog_id:{$ne:eliminate_blog}};
     }else if(query){
         findQuery = {draft:false, title: new RegExp(query, 'i')};
     }else if(author){
         findQuery = {draft:false, author};
     }
 
-    const maxQuery = 1;
+    const maxQuery = limit ? limit : 2;
 
     Blog.find(findQuery)
     .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
@@ -311,7 +313,7 @@ server.post("/search-blogs-count" , (req,res)=>{
 server.post("/create-blog",verifyJWT, (req,res)=>{
     const autherID = req.user;
     
-    let {title,des, banner, tags, content,draft = undefined} = req.body;
+    let {title,des, banner, tags, content,draft = undefined,id} = req.body;
 
     if(!draft){
         if(!des.length || des.length > 200){
@@ -339,29 +341,91 @@ server.post("/create-blog",verifyJWT, (req,res)=>{
 
     tags = tags.map(tag => tag.toLowerCase());
 
-    const blog_id = title.replace(/[^a-zA-Z0-9]/g,'').replace(/\s+/g,"-").trim() + nanoid();
+    const blog_id = id || title.replace(/[^a-zA-Z0-9]/g,'').replace(/\s+/g,"-").trim() + nanoid();
 
-    const blog = new Blog({
-        title,des,content,banner,tags,author:autherID,blog_id,draft:Boolean(draft)
-    });
-
-    blog.save().then(blog => {
-        const incrementalVal = draft ? 0 : 1;
-
-        User.findOneAndUpdate({_id : autherID} , {$inc : {"account_info.total_posts":incrementalVal}, $push :{"blogs":blog._id}}).then(user => {
-            return res.status(200).json({id : user._blog_id});
-        }).catch((err)=>{
-            return res.status(500).json({"error":"Failed to uplaod"});
-
+    if(id){
+        Blog.findOneAndUpdate({blog_id}, {title,des, banner, tags, content ,draft : draft ? draft : false})
+        .then(blog => {
+            return res.status(200).json({id : blog_id});
+        }).catch(err => {
+            return res.status(500).json({"error":err.message});
+        })
+    }
+    else{
+        const blog = new Blog({
+            title,des,content,banner,tags,author:autherID,blog_id,draft:Boolean(draft)
         });
 
-    }).catch(err => {
-        return res.status(500).json({"error":err.message});
-    })
+        blog.save().then(blog => {
+            const incrementalVal = draft ? 0 : 1;
+
+            User.findOneAndUpdate({_id : autherID} , {$inc : {"account_info.total_posts":incrementalVal}, $push :{"blogs":blog._id}}).then(user => {
+                return res.status(200).json({id : user._blog_id});
+            }).catch((err)=>{
+                return res.status(500).json({"error":"Failed to uplaod"});
+
+            });
+
+        }).catch(err => {
+            return res.status(500).json({"error":err.message});
+        })
+    }
 
 
 });
 
+server.post("/get-blog", (req,res)=>{
+    const {blog_id,draft,mode} = req.body;
+
+    const incrementalVal = mode !== 'edit' ? 1 : 0;
+
+    Blog.findOneAndUpdate({blog_id}, {$inc : {"activity.total_reads": incrementalVal}})
+    .populate("author", "personal_info.fullname personal_info.username personal_info.profile_img")
+    .select("title des content banner activity publishedAt blog_id tags")
+    .then(blog => {
+
+        User.findOneAndUpdate({"personal_info.username" :blog.author.personal_info.username},{
+            $inc : {"account_info.total_reads" : incrementalVal}
+        }).catch(err => {
+            return res.status(500).json({error : err.message});
+        })
+
+        if(blog.draft && !draft){
+            return res.status(500).json({error : "you cann't access draft blog"});
+        }
+
+        return res.status(200).json(blog);
+    })
+    .catch(err => {
+        return res.status(500).json({error : err.message});
+    })
+});
+
+server.post("/like-blog",verifyJWT, (req,res)=>{
+    const user_id = req.user;
+    const {_id, isLikedByUser} = req.body;
+
+    const incrementalVal = !isLikedByUser ? 1 : -1;
+
+    Blog.findOneAndUpdate({_id},{$inc : {"activity.total_likes" : incrementalVal}})
+    .then(blog => {
+
+        if(!isLikedByUser){
+            const like = new Notification({
+                type:"like",
+                blog:_id,
+                notification_for:blog.author,
+                user :user_id
+            });
+
+            like.save().then(notification => {
+                return res.status(200).json({liked_by_user :true});
+            })
+        }
+
+    })
+
+});
 server.listen(PORT,()=>{
     console.log('Listening to port --> '+ PORT);
 });
