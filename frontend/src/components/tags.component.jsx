@@ -33,7 +33,6 @@ const Tag = ({ tag ,tagIndex}) => {
       <p
         className="outline-none"
         onKeyDown={handleTagEdit}
-        contentEditable="true"
         onClick={addEditableFunc}
       >
         {tag}

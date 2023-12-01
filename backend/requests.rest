@@ -1,7 +1,6 @@
-GET http://localhost:3000/get-upload-url
+POST http://localhost:3000/get-profile
 Content-Type: application/json
 
 {
-    "email": "rahul@gmail.com",
-    "password": "r@hulA123"
+    "username":"rahul"
 }

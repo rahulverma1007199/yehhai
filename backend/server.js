@@ -192,6 +192,122 @@ server.post("/google-auth",async (req,res)=>{
     });
 });
 
+server.post("/search-blogs",(req,res)=>{
+    const {tag,query,page,author} = req.body;
+
+    let findQuery;
+
+    if(tag){
+        findQuery = {tags :tag, draft:false};
+    }else if(query){
+        findQuery = {draft:false, title: new RegExp(query, 'i')};
+    }else if(author){
+        findQuery = {draft:false, author};
+    }
+
+    const maxQuery = 1;
+
+    Blog.find(findQuery)
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
+    .sort({"publishedAt" : -1})
+    .select("blog_id title des banner activity tags publishedAt -_id")
+    .skip(maxQuery * (page - 1))
+    .limit(maxQuery).then((blogs)=>{
+        return res.status(200).json(blogs);
+    })
+    .catch(err=>{
+        return res.status(500).json({"error":err.message});
+    })
+
+});
+
+server.post("/get-profile",(req,res)=>{
+    const {username} = req.body;
+    User.findOne({"personal_info.username":username})
+    .select("-personal_info.password -google_auth -updatedAt -blogs")
+    .then(user => {
+        return res.status(200).json(user);
+    }).catch((err)=>{
+        return res.status(500).json({error:err.message});
+    })
+});
+
+server.post("/search-users", (req,res)=>{
+    const {query} = req.body;
+
+    User.find({"personal_info.username" : new RegExp(query,"i")})
+    .limit(50)
+    .select("personal_info.fullname personal_info.username personal_info.profile_img -_id")
+    .then(users => {
+        return res.status(200).json({users});
+    })
+    .catch(err => {
+        return res.status(500).json({err:err.message});
+    })
+});
+
+server.get("/trending-blogs",(req,res)=>{
+    const maxLimit = 5;
+
+    Blog.find({draft:false})
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
+    .sort({"activity.total_read" : -1,"activity.total_likes" : -1,"publishedAt" : -1})
+    .select("blog_id title publishedAt -_id")
+    .limit(maxLimit).then((blogs)=>{
+        return res.status(200).json(blogs);
+    })
+    .catch(err=>{
+        return res.status(500).json({"error":err.message});
+    })
+
+});
+
+server.post("/latest-blogs" , (req,res)=>{
+    const {page} = req.body;
+    const maxLimit = 1;
+    Blog.find({draft:false})
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
+    .sort({"publishedAt" : -1})
+    .select("blog_id title des banner activity tags publishedAt -_id")
+    .skip(maxLimit * (page - 1))
+    .limit(maxLimit).then((blogs)=>{
+        return res.status(200).json(blogs);
+    })
+    .catch(err=>{
+        return res.status(500).json({"error":err.message});
+    })
+});
+
+server.post("/all-latest-blogs-count" , (req,res)=>{
+    Blog.countDocuments({draft:false})
+    .then(count => {
+        return res.status(200).json({totalDocs : count});
+    }).catch(err => {
+        return res.status(500).json({"error":err.message});
+    })
+});
+
+server.post("/search-blogs-count" , (req,res)=>{
+    const {tag,author,query} = req.body;
+
+    let findQuery;
+
+    if(tag){
+        findQuery = {tags :tag, draft:false};
+    }else if(query){
+        findQuery = {draft:false, title: new RegExp(query, 'i')};
+    }else if(author){
+        findQuery = {draft:false, author};
+    }
+
+    Blog.countDocuments(findQuery)
+    .then(count => {
+        return res.status(200).json({totalDocs : count});
+    }).catch(err => {
+        return res.status(500).json({"error":err.message});
+    })
+});
+
 server.post("/create-blog",verifyJWT, (req,res)=>{
     const autherID = req.user;
     
@@ -202,9 +318,9 @@ server.post("/create-blog",verifyJWT, (req,res)=>{
             return res.status(403).json({"error":"You must provide desc under 200 words"});
         }
     
-        if(!banner.length){
-            return res.status(403).json({"error":"You must provide banner"});
-        }
+        // if(!banner.length){
+        //     return res.status(403).json({"error":"You must provide banner"});
+        // }
     
         if(!content.blocks.length){
             return res.status(403).json({"error":"You must provide some block content"});
