@@ -6,15 +6,28 @@ import { Toaster, toast } from 'react-hot-toast';
 import axios from 'axios';
 
 const BlogInteraction = () => {
-    let {blog,blog:{blog_id,title,activity,activity:{total_likes,total_comments},author:{personal_info:{username: author_username}}},setBlog,isLikedByUser,setIsLikedByUser} = useContext(BlogContext);
+    let {blog,blog:{_id, blog_id,title,activity,activity:{total_likes,total_comments},author:{personal_info:{username: author_username}}},setBlog,isLikedByUser,setIsLikedByUser,setCommentsWrapper} = useContext(BlogContext);
 
     const {userAuth:{username,access_token}} = useContext(UserContext);
 
     useEffect(()=>{
-        
+        if(access_token){
+            axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/isliked-by-user",{_id},{
+                headers:{
+                    'Authorization':`Bearer ${access_token}`
+                }
+            })
+            .then(({data:{result}}) => {
+                setIsLikedByUser(Boolean(result));
+            }).catch((err) => {
+                // setLoading(false);
+                console.log(err.message);
+            });
+        }
     },[]);
 
     const handleLike = () => {
+        console.log('here');
         if(access_token){
             setIsLikedByUser(preVal => !preVal);
             !isLikedByUser ? total_likes ++ : total_likes --;
@@ -30,7 +43,7 @@ const BlogInteraction = () => {
                 console.log(data);
                 // setSimilarBlogs(data);
             }).catch((err) => {
-                setLoading(false);
+                // setLoading(false);
                 console.log(err.message);
             });
         }else{
@@ -49,7 +62,7 @@ const BlogInteraction = () => {
                 </button>
                 <p className='text-xl text-dark-grey'>{total_likes}</p>
                 
-                <button className='w-10 h-10 rounded-full flex items-center justify-center bg-grey/80'>
+                <button onClick={() => setCommentsWrapper((prevVal)=>!prevVal)} className='w-10 h-10 rounded-full flex items-center justify-center bg-grey/80'>
                     <i className='fi fi-rr-comment-dots'></i>
                 </button>
                 <p className='text-xl text-dark-grey'>{total_comments}</p>
