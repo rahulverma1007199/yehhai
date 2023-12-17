@@ -32,7 +32,7 @@ const CommentField = ({action,index = undefined, replyingTo = undefined,setReply
 
             if(replyingTo){
 
-                commentArr[index].children.push(data._id);
+                commentArr[index].children.push(dataid);
                 data.childrenLevel = commentArr[index].childrenLevel + 1;
                 data.parentIndex = index;
 

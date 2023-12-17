@@ -4,7 +4,7 @@ import {Link} from "react-router-dom";
 
 const BlogPostCard = ({content,author}) => {
 
-    const {publishedAt, tags,title, des, banner, activity:{total_likes},blog_id:id} = content;
+    const {createdAt, tags,title, des, banner,total_likes,blog_id:id} = content;
     const {fullname,profile_img,username } = author;
 
 
@@ -14,7 +14,7 @@ const BlogPostCard = ({content,author}) => {
         <div className='flex gap-2 items-center mb-7'>
             <img src={profile_img} className='w-6 h-6 rounderd-full' alt="" />
             <p className='line-clamp-1'>{fullname}@{username}</p>
-            <p className='min-w-fit'>{getDay(publishedAt)}</p>
+            <p className='min-w-fit'>{getDay(createdAt)}</p>
         </div>
 
         <h1 className='blog-title'>{title}</h1>

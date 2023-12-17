@@ -30,7 +30,7 @@ export const fetchComments =async ({skip = 0,blog_id,setParentCommentCountFun,co
 
 const CommentsContainer = () => {
     const { blog,blog:
-            {   _id,
+            {   id,
                 title,
                 comments:{results:commentsArray},
                 activity:{total_parent_comments}

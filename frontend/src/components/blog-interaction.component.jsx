@@ -6,7 +6,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import axios from 'axios';
 
 const BlogInteraction = () => {
-    let {blog,blog:{_id, blog_id,title,activity,activity:{total_likes,total_comments},author:{personal_info:{username: author_username}}},setBlog,isLikedByUser,setIsLikedByUser,setCommentsWrapper} = useContext(BlogContext);
+    let {blog,blog:{_id, blog_id,title,total_likes,total_comments,user:{username: author_username}},setBlog,isLikedByUser,setIsLikedByUser,setCommentsWrapper} = useContext(BlogContext);
 
     const {userAuth:{username,access_token}} = useContext(UserContext);
 
@@ -27,28 +27,27 @@ const BlogInteraction = () => {
     },[]);
 
     const handleLike = () => {
-        console.log('here');
-        if(access_token){
-            setIsLikedByUser(preVal => !preVal);
-            !isLikedByUser ? total_likes ++ : total_likes --;
+        // if(access_token){
+        //     setIsLikedByUser(preVal => !preVal);
+        //     !isLikedByUser ? total_likes ++ : total_likes --;
 
-            setBlog({...blog,activity:{...activity,total_likes}})
+        //     setBlog({...blog,total_likes})
 
-            axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/like-blog",{_id,isLikedByUser},{
-                headers:{
-                    'Authorization':`Bearer ${access_token}`
-                }
-            })
-            .then(({data}) => {
-                console.log(data);
-                // setSimilarBlogs(data);
-            }).catch((err) => {
-                // setLoading(false);
-                console.log(err.message);
-            });
-        }else{
-            toast.error("please login");
-        }
+        //     axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/like-blog",{_id,isLikedByUser},{
+        //         headers:{
+        //             'Authorization':`Bearer ${access_token}`
+        //         }
+        //     })
+        //     .then(({data}) => {
+        //         console.log(data);
+        //         // setSimilarBlogs(data);
+        //     }).catch((err) => {
+        //         // setLoading(false);
+        //         console.log(err.message);
+        //     });
+        // }else{
+        //     toast.error("please login");
+        // }
     }
   return (
     <>

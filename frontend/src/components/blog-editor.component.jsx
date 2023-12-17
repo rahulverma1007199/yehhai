@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import logo from "../imgs/logo.png";
 import AnimationWrapper from "../common/page-animation";
 import defaultBanner from "../imgs/blog banner.png";
-import { uploadImage } from "../common/aws";
 import { Toaster, toast } from "react-hot-toast";
 import { EditorContext } from "../pages/editor.pages";
 import EditorJS from "@editorjs/editorjs";
@@ -33,21 +32,15 @@ const BlogEditor = () => {
   }, []);
 
   const handleBannerUpload = (e) => {
-    const img = e.target.files[0];
-    const loadingToast = toast.loading("Uploading ...");
-    if (img) {
-      uploadImage(img)
-        .then((url) => {
-          if (url) {
-            toast.dismiss(loadingToast);
-            toast.success("Uploaded");
-            setBlog({ ...blog, banner: url });
-          }
-        })
-        .catch((err) => {
-          toast.dismiss(loadingToast);
-          return toast.error(err.message);
-        });
+    const file = e.target.files?.[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(reader.readyState === 2){
+              setBlog({ ...blog, banner: e.target.result });
+            }
+        };
+        reader.readAsDataURL(file);
     }
   };
 
@@ -72,9 +65,9 @@ const BlogEditor = () => {
   };
 
   const handlePublishEvent = () => {
-    // if(!banner.length){
-    //   return toast.error("Upload a banner before publish it");
-    // }
+    if(!banner.length){
+      return toast.error("Upload a banner before publish it");
+    }
 
     if (!title.length) {
       return toast.error("Write a title before publish it");
@@ -106,15 +99,13 @@ const BlogEditor = () => {
       return toast.error("Fill Title");
     }
 
-    let loadingToast = toast.loading("Saving Draft ...");
+    const loadingToast = toast.loading("Saving Draft ...");
 
     e.target.classList.add("disable");
     if (textEditor.isReady) {
       textEditor.save().then((content) => {
-        const blogObj = { title, banner, des, content, tags, draft: true };
-
-        axios
-          .post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", {...blog,id:blog_id}, {
+        const blogObj = { draft: true ,title, banner, des, content, tags,};
+        axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", {...blogObj,id:blog_id}, {
             headers: {
               Authorization: `Bearer ${access_token}`,
             },

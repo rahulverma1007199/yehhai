@@ -4,10 +4,10 @@ import { getDay } from "../common/date";
 
 const MinimalBannerPost = ({ blog, index }) => {
   const {
-    publishedAt,
+    createdAt,
     title,
-    author: {
-      personal_info: { fullname, profile_img, username },
+    user: {
+      fullname, profile_img, username ,
     },
     blog_id: id,
   } = blog;
@@ -19,9 +19,9 @@ const MinimalBannerPost = ({ blog, index }) => {
         <div className="flex gap-2 items-center mb-7">
           <img src={profile_img} className="w-6 h-6 rounderd-full" alt="" />
           <p className="line-clamp-1">
-            {fullname}@{username}
+            {fullname} @{username}
           </p>
-          <p className="min-w-fit">{getDay(publishedAt)}</p>
+          <p className="min-w-fit">{getDay(createdAt)}</p>
         </div>
         <h1 className="blog-title">{title}</h1>
       </div>

@@ -114,13 +114,13 @@ const HomePage = () => {
                 blogs.results.length ? 
                 blogs.results.map((blog, i) => {
                   return (
-                    <AnimationWrapper transition={{ duration: 1, delay: i * 0.1 }} >
+                    // <AnimationWrapper transition={{ duration: 1, delay: i * 0.1 }} >
                       <BlogPostCard
                         key={i}
                         content={blog}
-                        author={blog.author.personal_info}
+                        author={blog.user}
                       />
-                    </AnimationWrapper>
+                    // </AnimationWrapper>
                   );
                 }) : <NoDataMessage message="No Blog Published" />
               )}
@@ -133,11 +133,11 @@ const HomePage = () => {
               trendingBlogs.length ? 
               trendingBlogs.map((blog, i) => {
                 return (
-                  <AnimationWrapper
-                    transition={{ duration: 1, delay: i * 0.1 }}
-                  >
-                    <MinimalBannerPost blog={blog} index={i} />
-                  </AnimationWrapper>
+                  // <AnimationWrapper
+                  //   transition={{ duration: 1, delay: i * 0.1 }}
+                  // >
+                    <MinimalBannerPost blog={blog} index={i} key={i} />
+                  // </AnimationWrapper>
                 );
               }) : <NoDataMessage message="No Trending Blog Published" />
             )}
@@ -172,11 +172,11 @@ const HomePage = () => {
                 trendingBlogs.length ? 
                 trendingBlogs.map((blog, i) => {
                   return (
-                    <AnimationWrapper
-                      transition={{ duration: 1, delay: i * 0.1 }}
-                    >
-                      <MinimalBannerPost blog={blog} index={i} />
-                    </AnimationWrapper>
+                    // <AnimationWrapper
+                    //   transition={{ duration: 1, delay: i * 0.1 }}
+                    // >
+                      <MinimalBannerPost blog={blog} index={i} key={i}/>
+                    // </AnimationWrapper>
                   );
                 }) : <NoDataMessage message="No Trending Blog Published" />
               )}

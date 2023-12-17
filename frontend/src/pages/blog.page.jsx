@@ -12,13 +12,14 @@ import CommentsContainer, { fetchComments } from '../components/comments.compone
 export const blogStructure = {
     title:'',
     des:'',
-    content:[],
-    author:{
-        personal_info :{},
+    content:{
+        blocks:[]
+    },
+    user:{
     },
     activity:{},
     banner : '',
-    publishedAt:''
+    createdAt:''
 }
 
 export const BlogContext = createContext({});
@@ -34,11 +35,12 @@ const BlogPage = () => {
     const [commentsWrapper, setCommentsWrapper] = useState(true);
     const [totalParentCommentsLoaded, setTotalParentCommentsLoaded] = useState(0);
 
-    const {title,content,banner,author:{personal_info:{profile_img,fullname, username:author_username}},publishedAt} = blog;
+    const {title,content,banner,user:{profile_img,fullname, username:author_username},createdAt} = blog;
     const fetchBlog = () => {
         axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/get-blog",{blog_id})
       .then(async ({ data }) => {
-        data.comments = await fetchComments({blog_id:data._id,setParentCommentCountFun:setTotalParentCommentsLoaded});
+          // data.comments = await fetchComments({blog_id:data.id,setParentCommentCountFun:setTotalParentCommentsLoaded});
+        data.comments ={};
         setBlog(data);
         axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/search-blogs",{tag:data?.tags[0],limit: 6, eliminate_blog : blog_id})
         .then(({data}) => {
@@ -75,7 +77,7 @@ const BlogPage = () => {
         {
             loading ? <Loader/> :
             <BlogContext.Provider value={{blog,setBlog,isLikedByUser,setIsLikedByUser,commentsWrapper,setCommentsWrapper,totalParentCommentsLoaded,setTotalParentCommentsLoaded}}>
-                <CommentsContainer />
+                {/* <CommentsContainer /> */}
                 <div className='max-w-[900px] center py-10 max-lg:px-[5vw]'>
                     <img src={banner} className='aspect-video' alt="" />
 
@@ -92,7 +94,7 @@ const BlogPage = () => {
                                     <Link to={`/user/${author_username}`} className='underline'>{author_username}</Link>
                                 </p>
                             </div>
-                            <p className='text-dark-grey opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5'>Published on {getDay(publishedAt)}</p>
+                            <p className='text-dark-grey opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5'>Published on {getDay(createdAt)}</p>
                         </div>
                     </div>
 
@@ -100,7 +102,7 @@ const BlogPage = () => {
 
                     <div className='my-12 font-gelasio blog-page-content'>
                         {
-                            content[0].blocks.map((block,i)=>{
+                            content?.blocks.map((block,i)=>{
                                 return <div key={i} className='my-4 md:my-8'>
                                     <BlogContent block={block}/>
                                 </div>

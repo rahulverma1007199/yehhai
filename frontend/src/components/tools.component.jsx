@@ -5,17 +5,21 @@ import Header from "@editorjs/header";
 import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
 import InlineCode from "@editorjs/inline-code";
-import { uploadImage } from "../common/aws";
 
 const uploadImageByFile = (e) => {
-    return uploadImage(e).then(url => {
-        if(url){
-            return {
-                success:1,
-                file:{url}
+    const file = e.target.files?.[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(reader.readyState === 2){
+                return{
+                    success:1,
+                    file:e.target.result
+                }
             }
-        }
-    })
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 const uploadImageByURL = async (e) => {

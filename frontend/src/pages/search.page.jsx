@@ -86,7 +86,7 @@ const SearchPage = () => {
                       <BlogPostCard
                         key={i}
                         content={blog}
-                        author={blog.author.personal_info}
+                        author={blog.user}
                       />
                     </AnimationWrapper>
                   );

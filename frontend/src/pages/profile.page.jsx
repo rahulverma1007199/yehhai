@@ -13,18 +13,14 @@ import { filterPaginationData } from '../common/filter-pagination-data';
 import PageNotFound from './404.page';
 
 export const profileDataStructure = {
-    personal_info: {
         fullname: "",
         username: "",
         bio: "",
-        profile_img: ""
-      },
-      account_info: {
+        profile_img: "",
         total_posts: 0,
-        total_reads: 0
-      },
+        total_reads: 0,
       social_links: {},
-      joinedAt:" "
+      createdAt:" "
 };
 
 const ProfilePage = () => {
@@ -38,7 +34,7 @@ const ProfilePage = () => {
     const [blogs,setBlogs] = useState(null);
     const [profileLoaded, setProfileLoaded] = useState("");
 
-    const {personal_info: { fullname, username : profile_username, bio, profile_img }, account_info: {total_posts,total_reads },social_links,joinedAt} = profile;
+    const { fullname, username : profile_username, bio, profile_img ,total_posts,total_reads ,social_links,createdAt} = profile;
 
     const fetchUserProfile = () => {
         axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/get-profile",{username: profileID })
@@ -47,7 +43,7 @@ const ProfilePage = () => {
                 setProfile(data);
             }
             setProfileLoaded(profileID);
-            getBlogs({page: 1,user_id: data._id});
+            getBlogs({page: 1,user_id: data.id});
             setLoading(false);
         })
         .catch((err) => {
@@ -115,7 +111,7 @@ const ProfilePage = () => {
                         : ""}
                     </div>
 
-                    <AboutUser className="max-md:hidden" social_links={social_links} bio={bio} joinedAt={joinedAt}/>
+                    <AboutUser className="max-md:hidden" social_links={social_links} bio={bio} createdAt={createdAt}/>
 
                 </div>
 
@@ -135,7 +131,7 @@ const ProfilePage = () => {
                       <BlogPostCard
                         key={i}
                         content={blog}
-                        author={blog.author.personal_info}
+                        author={blog.user}
                       />
                     </AnimationWrapper>
                   );
@@ -144,7 +140,7 @@ const ProfilePage = () => {
               <LoadMoreDataBtn state={blogs} fetchDataFun={getBlogs}/>
             </>
 
-            <AboutUser bio={bio} social_links={social_links} joinedAt={joinedAt}/>
+            <AboutUser bio={bio} social_links={social_links} createdAt={createdAt}/>
           </InPageNavigation>
                 </div>
             </section>
