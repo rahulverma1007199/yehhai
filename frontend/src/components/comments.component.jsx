@@ -22,13 +22,12 @@ export const fetchComments =async ({skip = 0,blog_id,setParentCommentCountFun,co
         }else{
             res = { results : [...comment_array, ...data]};
         }
-
-        return res;
-
-    })
+    });
+    return res;
 }
 
 const CommentsContainer = () => {
+    // console.log(useContext(BlogContext));
     const { blog,blog:
             {   _id,
                 title,

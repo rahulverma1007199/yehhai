@@ -30,7 +30,7 @@ const Editor = () => {
 
   useEffect(()=>{
     if(!blog_id){
-      return setLoading(true);
+      return setLoading(false);
     }
 
     axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/get-blog",{blog_id,draft:true, mode:'edit'})

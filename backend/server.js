@@ -7,14 +7,13 @@ import jwt from "jsonwebtoken";
 import cors from 'cors';
 import admin from 'firebase-admin';
 import {getAuth} from 'firebase-admin/auth';
-import aws from "aws-sdk";
-
 import User from "./Schema/User.js";
 import Blog from "./Schema/Blog.js";
 import Notification from "./Schema/Notification.js";
 import Comment from "./Schema/Comment.js";
 
-import serviceAccountKey from './yeh-hai-14364-firebase-adminsdk-xeyjy-746e1f0b76.json' assert { type: "json" };;
+import serviceAccountKey from './yeh-hai-14364-firebase-adminsdk-xeyjy-746e1f0b76.json' assert { type: "json" };import getS3URL from './util/aws.js';
+;
 
 const server = express();
 const PORT = 3000;
@@ -29,26 +28,18 @@ server.use(express.json());
 
 mongoose.connect(process.env.DB_URL,{
     autoIndex:true
+}).then(()=>{
+    console.log("connected")
+}).catch(err => {
+    console.log("failed")
 });
 
 //seting up s3 bucket
-const s3 = new aws.S3({
-    region:'ap-south-1',
-    accessKeyId:process.env.AWS_SECRET_KEY,
-    secretAccessKey:process.env.AWS_ACCESS_KEY
-});
-
-const generateUploadURL =async () => {
-    const date = new Date();
-    const imageName = `${nanoid()}-${date.getTime()}.jpeg`;
-
-    return await s3.getSignedUrlPromise('putObject',{
-        Bucket:'bucketname',
-        Key:imageName,
-        Expires:1000,
-        ContentType : "image/jpeg"
-    })
-}
+// const s3 = new aws.S3({
+//     region:'ap-south-1',
+//     accessKeyId:process.env.AWS_SECRET_KEY,
+//     secretAccessKey:process.env.AWS_ACCESS_KEY
+// });
 
 const formatDataToSend = (user) => {
     const access_token = jwt.sign({id : user._id}, process.env.SECRET_ACCESS_KEY)
@@ -88,7 +79,9 @@ const verifyJWT = (req,res,next) => {
 
 //upload image url route
 server.get("/get-upload-url",(req,res) => {
-    generateUploadURL().then(url => res.status(200).json({"uploadURL":url})).catch(err => {
+    const imageName = `${nanoid()}-${Date.now()}.jpeg`;
+
+    getS3URL(imageName).then(url => res.status(200).json({"uploadURL":url})).catch(err => {
         res.status(500).json({'error':err.message});
     });
 });
@@ -192,6 +185,50 @@ server.post("/google-auth",async (req,res)=>{
         return res.status(200).json(formatDataToSend(user));
     }).catch(err => {
         return res.status(500).json({"error": "Failed to authenticate with google"});
+    });
+});
+
+server.post("/change-password", verifyJWT, (req,res)=>{
+    const {currentPassword,newPassword} = req.body;
+
+    if(!passwordRegex.test(currentPassword) || !passwordRegex.test(newPassword)){
+        return res.status(403).json({"error":"Password should be 6 to 20 characters long with a numeric, 1 lowercase and 1 uppercase letters"});
+    }
+
+    User.findOne({_id:req.user}).then(
+        (user) => {
+
+            if(user.google_auth){
+                res.status(403).json({error:"you can't change account's password because you logged in thorugh google"});
+            }
+
+            bcrypt.compare(currentPassword,user.personal_info.password,(err, result)=> {
+
+                if(err){
+                    return res.status(500).json({"error":"Some error occured while changing the password, please try again later"});
+                }
+
+                if(!result){
+                    return res.status(403).json({"error":"Incorrect Password"});
+                }
+
+                bcrypt.hash(newPassword, 10, (err, hashed_password)=>{
+
+                    User.findOneAndUpdate({_id:req.user}, {"personal_info.password":hashed_password})
+                    .then((u)=>{
+                        return res.status(200).json({status:"Password Changed"});
+                    })
+                    .catch(err => {
+                        return res.status(500).json({error: "Some error occured while saving the password, please try again later"});
+                    })
+                });
+
+
+            });
+        }
+    )
+    .catch(err => {
+        return res.status(403).json({error:"No User Found"});
     });
 });
 
@@ -321,9 +358,9 @@ server.post("/create-blog",verifyJWT, (req,res)=>{
             return res.status(403).json({"error":"You must provide desc under 200 words"});
         }
     
-        // if(!banner.length){
-        //     return res.status(403).json({"error":"You must provide banner"});
-        // }
+        if(!banner.length){
+            return res.status(403).json({"error":"You must provide banner"});
+        }
     
         if(!content.blocks.length){
             return res.status(403).json({"error":"You must provide some block content"});
@@ -385,7 +422,7 @@ server.post("/get-blog", (req,res)=>{
     .select("title des content banner activity publishedAt blog_id tags")
     .then(blog => {
 
-        User.findOneAndUpdate({"personal_info.username" :blog.author.personal_info.username},{
+        User.findOneAndUpdate({"personal_info.username" :blog?.author.personal_info.username},{
             $inc : {"account_info.total_reads" : incrementalVal}
         }).catch(err => {
             return res.status(500).json({error : err.message});
@@ -415,7 +452,7 @@ server.post("/like-blog",verifyJWT, (req,res)=>{
             const like = new Notification({
                 type:"like",
                 blog:_id,
-                notification_for:blog.author,
+                notification_for:blog?.author,
                 user :user_id
             });
 
@@ -461,7 +498,7 @@ server.post("/add-comment",verifyJWT,(req,res) => {
     }
 
     // creating a comment doc
-    const commentObj =new Comment({
+    const commentObj = new Comment({
         blog_id: _id, blog_author,comment, commented_by:user_id
     });
 
@@ -473,7 +510,9 @@ server.post("/add-comment",verifyJWT,(req,res) => {
     new Comment(commentObj).save().then(async commentFile => {
 
         const {comment,commentedAt,children} = commentFile;
-        Blog.findOneAndUpdate({_id},{$push : {"comment":commentFile._id}, $inc: {"activity.total_comments" : 1, "activity.total_parent_comments":replying_to ? 0 : 1}}).then(blog => {console.log("New comment created!")})
+        Blog.findOneAndUpdate({_id},{$push : {"comments":commentFile._id}, $inc: {"activity.total_comments" : 1, "activity.total_parent_comments":replying_to ? 0 : 1}}).then(blog => {console.log("New comment created!")}).catch(err=>{
+            console.log({error:err.message});
+        })
 
         const notificationObj = {
             type:replying_to ? "reply":"comment",
@@ -521,7 +560,7 @@ server.post("/get-replies",(req,res)=>{
 
     const maxLimit = 5;
 
-    Comment.findOne({_id}).populate({path:"children",option:{
+    Comment.findOne({_id}).populate({path:"children",options:{
         limit:maxLimit,
         skip:skip,
         sort:{'commentedAt' : -1}
@@ -575,6 +614,68 @@ server.post("/delete-comment",verifyJWT ,(req,res)=>{
         }else{
             return res.status(403).json({error: "You cann't delete this comment"})
         }
+    })
+});
+
+server.post("/update-profile-url", verifyJWT, (req,res)=>{
+    const { url } = req.body;
+
+    User.findOneAndUpdate({_id:req.user},{"personal_info.profile_img":url})
+    .then(()=>{
+        return res.status(200).json({profile_img : url});
+    }).catch(err => {
+        return res.status(500).json({error : err.message});
+    })
+});
+
+server.post("/update-profile", verifyJWT, (req,res)=>{
+    const { username,bio, social_links } = req.body;
+
+    const bioLimit = 150;
+
+    if(username.length < 3) {
+        return toast.error("Username should be at-least 3 letters long");
+    }
+
+    if(bio.length > bioLimit){
+        return toast.error(`Bio should not be more than ${bioLimit}`);
+    }
+
+    const socialLinksArr =  Object.keys(social_links);
+
+    try {
+        
+        for(let i = 0; i < socialLinksArr.length ; i ++) {
+            if(social_links[socialLinksArr[i]].length){
+                const hostname = new URL(social_links[socialLinksArr[i]]).hostname;
+
+                if(!hostname.includes(`${socialLinksArr[i]}.com`) && socialLinksArr[i] !== 'website'){
+                    return res.status(403).json({error : `${socialLinksArr[i]} link is invalid. You must enter a full link`});
+                }
+            }
+        }
+
+    } catch (error) {
+        return res.status(500).json({error : "You must provide full social links with http(s) included "});
+    }
+
+    const updateObj = {
+        "personal_info.username" : username,
+        "personal_info.bio" : bio,
+        social_links
+    }
+
+
+    User.findOneAndUpdate({_id:req.user},updateObj , {
+        runValidators:true
+    })
+    .then(()=>{
+        return res.status(200).json({username});
+    }).catch(err => {
+        if(err.code = 11000){
+            return res.status(409).json({error: 'username is already taken'});
+        }
+        return res.status(500).json({error : err.message});
     })
 });
 

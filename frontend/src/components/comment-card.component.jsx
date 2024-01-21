@@ -4,10 +4,11 @@ import { UserContext } from '../App';
 import { toast } from 'react-hot-toast';
 import CommentField from './comment-field.component';
 import axios from 'axios';
+import { BlogContext } from '../pages/blog.page';
 
 const CommentCard = ({index,leftVal,commentData}) => {
 
-    const {commented_by: {personal_info : {profile_img, fullname, username:commented_by_username}}, commendtedAt,comment,_id,children} = commentData;
+    const {commented_by: {personal_info : {profile_img, fullname, username:commented_by_username}}, commentedAt,comment,_id,children} = commentData;
     const {blog,blog:{comments,activity,activity:{total_parents_comments},comments:{results:commentsArr},author:{personal_info:{username:blog_author}}},setBlog,setTotalParentCommentsLoaded} = useContext(BlogContext);
 
     const {userAuth:{access_token,username}} = useContext(UserContext);
@@ -72,18 +73,18 @@ const CommentCard = ({index,leftVal,commentData}) => {
         removeCommentsCards(index + 1);
     }
 
-    const showReplies = ({skip = 0}) => {
-        if(children.length){
+    const showReplies = ({skip = 0,currentIndex = index}) => {
+        if(commentsArr[currentIndex].children.length){
 
             hideReplyFun();
 
-            axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/get-replies",{_id,skip}).then(({data:{replies}})=>{
-                commentData.isReplyLoaded = true;
+            axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/get-replies",{_id:commentsArr[currentIndex]._id,skip}).then(({data:{replies}})=>{
+                commentsArr[currentIndex].isReplyLoaded = true;
 
                 for(let i = 0; i < replies.length ; i++){
-                    replies[i].childrenLevel = commentData.childrenLevel + 1;
+                    replies[i].childrenLevel = commentsArr[currentIndex].childrenLevel + 1;
 
-                    commentsArr.splice(index + 1 + i + skip,0,replies[i]);
+                    commentsArr.splice(currentIndex + 1 + i + skip,0,replies[i]);
                 }
 
                 setBlog({...blog,comments:{...comments, results:commentsArr}});
@@ -95,7 +96,7 @@ const CommentCard = ({index,leftVal,commentData}) => {
     }
 
     const deleteComment = (e) => {
-        e.target.setArrtibute("disable",true);
+        e.target.setAttribute("disable",true);
 
         axios.post(import.meta.env.VITE_SERVER_DOMAIN+ "/delete-comment",{_id}),{
             headers:{
@@ -111,6 +112,28 @@ const CommentCard = ({index,leftVal,commentData}) => {
         })
     }
 
+    const LoadMoreRepliesButton = (e) => {
+
+        const parentIndex = getParentIndex();
+
+        const button = <button onClick={() => showReplies({skip:index  - parentIndex, currentIndex:parentIndex})} className='text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2'>Load More Replies</button>;
+        
+        if(commentsArr[index + 1]){
+            if(commentsArr[index + 1].childrenLevel < commentsArr[index].childrenLevel){
+                if((index - parentIndex) < commentsArr[parentIndex].children.length){
+                    return button;
+                }
+            }
+        }else{
+            if(parentIndex){
+                if((index - parentIndex) < commentsArr[parentIndex].children.length){
+                    return button;
+                }
+            }
+        }
+
+    }
+
   return (
     <div className='w-full' style={{paddingLeft:`${leftVal * 10}px`}}>
         <div className='my-5 p-6 rounded-md border border-grey'>
@@ -118,21 +141,26 @@ const CommentCard = ({index,leftVal,commentData}) => {
                 <img src={profile_img} className='w-6 h-6 rounded-full' alt="" />
 
                 <p className='line-clamp-1'>{fullname} @{commented_by_username}</p>
-                <p className='min-w-fil'>{getDay(commendtedAt)}</p>
+                <p className='min-w-fil'>{getDay(commentedAt)}</p>
             </div>
             <p className='text-xl font-gelasio ml-3'> {comment}</p>
 
-            <div onClick={handleReplyClick} className='flex gap-5 items-center mt-5'>
+            <div className='flex gap-5 items-center mt-5'>
                 {
                     commentData.isReplyLoaded ? 
-                    <button className='text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2'>
-                        <i className='fi fi-rs-comment-dots' onClick={hideReplyFun}></i>
-                        Hide Reply
-                    </button> :
-                     <button className='text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2' onClick={showReplies}>
-                     <i className='fi fi-rs-comment-dots' ></i>
-                     {children.length} Reply
-                 </button> 
+                    (
+                        <button className='text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2' onClick={hideReplyFun}>
+                            <i className='fi fi-rs-comment-dots'></i>
+                            Hide Reply
+                        </button> 
+                    )
+                    :
+                    (
+                        <button className='text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2' onClick={showReplies}>
+                            <i className='fi fi-rs-comment-dots' ></i>
+                            {children.length} Reply
+                        </button> 
+                    )
                 }
                 <button className='underline' onClick={handleReplyClick}>Reply</button>
                 {
@@ -153,6 +181,7 @@ const CommentCard = ({index,leftVal,commentData}) => {
                 </div> : ""
             }
         </div>
+        <LoadMoreRepliesButton />
     </div>
   )
 }

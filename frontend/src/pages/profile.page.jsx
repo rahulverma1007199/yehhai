@@ -135,7 +135,7 @@ const ProfilePage = () => {
                       <BlogPostCard
                         key={i}
                         content={blog}
-                        author={blog.author.personal_info}
+                        author={blog?.author.personal_info}
                       />
                     </AnimationWrapper>
                   );

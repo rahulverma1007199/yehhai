@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getDay } from "../common/date";
 
 const MinimalBannerPost = ({ blog, index }) => {
+  console.log(blog);
   const {
     publishedAt,
     title,
