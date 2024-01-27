@@ -114,7 +114,7 @@ const BlogEditor = () => {
         const blogObj = { title, banner, des, content, tags, draft: true };
 
         axios
-          .post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", {...blog,id:blog_id}, {
+          .post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", {...blogObj,id:blog_id}, {
             headers: {
               Authorization: `Bearer ${access_token}`,
             },

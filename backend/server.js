@@ -796,14 +796,9 @@ server.post("/user-written-blogs-count",verifyJWT,(req,res)=>{
 
     const user_id = req.user;
 
-    const {page,draft} = req.body;
+    const {query,draft} = req.body;
 
-    const maxLimit = 5;
-    const skipDocs = (page - 1) * maxLimit;
 
-    if(deletedDocCount){
-        skipDocs -= deletedDocCount;
-    }
 
     Blog.countDocuments({author:user_id,draft,title: new RegExp(query,'i')})
     .then(count => {

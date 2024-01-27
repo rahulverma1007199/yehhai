@@ -100,7 +100,7 @@ export const ManagePublishedBlogCard = ({blog}) => {
 
 export const ManageDraftBlogCard = ({blog}) => {
 
-    let {desc,blog_id,title,index} = blog;
+    let {des,blog_id,title,index} = blog;
     const {userAuth:{access_token}} = useContext(UserContext);
     index++;
     return (
@@ -111,7 +111,7 @@ export const ManageDraftBlogCard = ({blog}) => {
 
                 <div>
                     <h1 className='blog-title mb-3'>{title}</h1>
-                    <p className='line-clamp-2 font-gelasio'>{desc.length ? desc : "No Description"}</p>
+                    <p className='line-clamp-2 font-gelasio'>{des.length ? des : "No desription"}</p>
 
                     <div className='flex gap-6 mt-3'>
                         <Link to={`/editor/${blog_id}`} className='pr-4 py-2 underline'>Edit</Link>
