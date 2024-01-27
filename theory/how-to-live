@@ -1,0 +1,16 @@
+for server - render.com
+    github signin
+    new web service
+
+for frontend - app.netlify.com
+    paste your render domain in vite_server
+    npm run build
+    github login
+    in domain management we can change the subdomain
+    in your build folder along with index.html
+    netlify.toml 
+        inside it
+        [[redirects]]
+        from = "/*"
+        to = "/"
+        status = 200

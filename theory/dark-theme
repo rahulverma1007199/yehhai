@@ -1,0 +1,8 @@
+for darktheme
+
+in tailwind-config.js
+    npm i -D tw-colors
+    plugins
+        createTheme
+        To set the theme globally in the index.html give body tag data-theme='light'
+        change images as per the light and dark theme -- you will get it in the imgs folder
