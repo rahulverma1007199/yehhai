@@ -1,9 +1,9 @@
 import React from 'react'
 
-const LoadMoreDataBtn = ({state,fetchDataFun}) => {
+const LoadMoreDataBtn = ({state,fetchDataFun,additionalParam}) => {
     if(state !== null && state.totalDocs > state.results.length){
         const handleClick = () => {
-            fetchDataFun({page:state.page+1})
+            fetchDataFun({...additionalParam,page:state.page+1})
         }
         return (
             <button 
